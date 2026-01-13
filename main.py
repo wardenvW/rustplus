@@ -156,6 +156,11 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
 async def main():
     # ------------------- ЛОГИРОВАНИЕ -------------------
+    root_logger = logging.getLogger()
+    root_logger.handlers.clear()  # удаляем все старые обработчики
+    root_logger.setLevel(logging.DEBUG)
+
+
     formatter = logging.Formatter('%(asctime)s [%(levelname)s]:%(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
     logger = logging.getLogger("rustWplus.py")
