@@ -128,36 +128,35 @@ class TrackedList:
         while self.running:
             old_status = {p.bm_id: p.online for p in self._players.values()}
             changed = False
+            
+            async with asyncio.TaskGroup() as tg:
+                for player in list(self._players.values()):
+                    if time.time() - player._last_update >= INTERVAL:
+                        tg.create_task(self.fetch_status(player))
 
-            for player in list(self._players.values()):
-                if time.time() - player._last_update >= INTERVAL:
-                    try:
-                        await self.fetch_status(player)
-                    except asyncio.CancelledError:
-                        raise
-                    except Exception as e:
-                        logger.warning(f"fetch_status failed for {player.bm_id}: {e}")
 
             for player in self._players.values():
-                if player.bm_id in old_status:
-                    if old_status[player.bm_id] != player.online:
-                        changed = True
-                        await self._on_status_change(player, player.online)
+                if player.bm_id in old_status and old_status[player.bm_id] != player.online:
+                    changed = True
+                    if self._on_status_change:
+                        try:
+                            await self._on_status_change(player, player.online)
+                        except Exception as e:
+                            logger.warning(f"on_status_change failed for {player.bm_id}: {e}")
 
             if changed:
                 try:
                     async with self._lock:
                         with open(BOOT_FILE, 'r', encoding='utf-8') as f:
                             data = json.load(f)
-                            
                         data["players"] = [p.serialize() for p in self._players.values()]
-
                         with open(BOOT_FILE, 'w', encoding='utf-8') as f:
                             json.dump(data, f, ensure_ascii=False, indent=2)
                 except Exception as e:
-                    print(f"Failed to update BOOT_FILE: {e}")
+                    logger.warning(f"Failed to update BOOT_FILE: {e}")
 
             await asyncio.sleep(UPDATE_RATE)
+
 
 
     async def start(self) -> None:
