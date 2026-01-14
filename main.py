@@ -65,12 +65,13 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
             if isinstance(result, RustError):
                 attempts += 1
-                logger.info(f"Health check failed ({attempts}/3): {result}")
+                logger.warning(f"[HEALTH CHECK] Server did not respond ({attempts}/3): {result}")
             else:
                 attempts = 0
+                logger.info(f"[HEALTH CHECK] Server OK at {time.strftime('%H:%M:%S')}")
             
             if attempts >= 3:
-                logger.exception(f"Disconnect socket")
+                logger.exception(f"[HEALTH CHECK] Disconnect socket")
                 await socket.disconnect()
                 break
 
