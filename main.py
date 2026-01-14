@@ -169,7 +169,7 @@ async def main():
 
     formatter = logging.Formatter('%(asctime)s [%(levelname)s]:%(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
-    logger = logging.getLogger("rustWplus.py")
+    logger = logging.getLogger("rustWplus")
     logger.setLevel(logging.DEBUG)
 
     fh = logging.FileHandler(filename='logs.log', encoding='utf-8')

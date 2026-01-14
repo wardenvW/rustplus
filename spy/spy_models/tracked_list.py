@@ -5,6 +5,7 @@ import time
 import asyncio
 import aiohttp
 import os
+import logging
 import json
 from dotenv import load_dotenv
 
@@ -18,6 +19,7 @@ headers = {
     "Accept": "application/json"
 }
 
+logger = logging.getLogger("rustWplus")
 
 class TrackedList:
     def __init__(self, server_id: str = None) -> None:
@@ -89,9 +91,9 @@ class TrackedList:
                 player._last_logout = time.time()
 
         player._last_update = time.time()
-
-        if not player.online:
-            print(f"Player {player.bm_id} offline")
+        
+        logger.info(f"Player {player.bm_id} {'online' if player.online else 'offline'}")
+        
                         
 
     def get_player(self, bm_id: str) -> Union[TrackedPlayer, None]:
@@ -201,7 +203,7 @@ class TrackedList:
             data = await resp.json()
 
         candidates = []
-
+        
         for srv in data.get("data", []):
             ip = srv["attributes"]["ip"]
             if ip == server_ip:
