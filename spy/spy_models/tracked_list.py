@@ -43,9 +43,6 @@ class TrackedList:
             raise ValueError
         
         await self.fetch_status(player)
-        now = time.time()
-        player._last_logout = now
-        player._last_login = now
         self._players[player.bm_id] = player
         
 
@@ -71,7 +68,7 @@ class TrackedList:
             data = await resp.json()
 
         if DEBUG:
-            debug_file = f"debug_player_{player.bm_id}.json"
+            debug_file = f"players/debug_player_{player.bm_id}.json"
             with open(debug_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             (f"Saved debug data to {debug_file}")
@@ -114,7 +111,7 @@ class TrackedList:
                     
                     data["players"] = [p.serialize() for p in self._players.values()]
                     with open(BOOT_FILE, "w", encoding="utf-8") as f:
-                        json.dump(data, f, ensure_ascii=False)
+                        json.dump(data, f, ensure_ascii=False, indent=2)
             except Exception as e:
                 print(f"Failed to update BOOT_FILE: {e}")
 
@@ -146,7 +143,7 @@ class TrackedList:
                         data["players"] = [p.serialize() for p in self._players.values()]
 
                         with open(BOOT_FILE, 'w', encoding='utf-8') as f:
-                            json.dump(data, f, ensure_ascii=False)
+                            json.dump(data, f, ensure_ascii=False, indent=2)
                 except Exception as e:
                     print(f"Failed to update BOOT_FILE: {e}")
 

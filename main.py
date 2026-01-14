@@ -57,16 +57,22 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
     # ------------------- Health Check -------------------
     async def bot_health_check():
+        attempts = 0
         while True:
-            await asyncio.sleep(60) 
-            try:
-                result = await socket.get_time()
-                if isinstance(result, RustError):
-                    logger.error(f"[HEALTH CHECK] Server did not respond: {result}")
-                else:
-                    logger.info(f"[HEALTH CHECK] Server OK at {time.strftime('%H:%M:%S')}")
-            except Exception as e:
-                logger.error(f"[HEALTH CHECK] Exception occurred: {e}")
+            await asyncio.sleep(60)
+
+            result = await socket.get_time()
+
+            if isinstance(result, RustError):
+                attempts += 1
+                logger.info(f"Health check failed ({attempts}/3): {result}")
+            else:
+                attempts = 0
+            
+            if attempts >= 3:
+                logger.exception(f"Disconnect socket")
+                await socket.disconnect()
+                break
 
     health_task = asyncio.create_task(bot_health_check())
 
@@ -142,7 +148,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
                 await socket.send_team_message(f"Player({bm_id}) not found.")
 
         # ------------------- Keep alive -------------------
-        await socket.keep_programm_alive()
+        #await socket.keep_programm_alive()
     
     finally:
         # Отменяем health check при завершении работы бота
@@ -228,12 +234,13 @@ async def main():
                 await run_bot(socket, tracking, server_details, logger)
 
         except Exception as e:
-            logger.info("Reconnecting in 5 seconds...")
+            logger.exception("WebSocket crashed, reconnecting in 5 seconds")
         finally:
-            try:
-                await socket.close()
-            except:
-                pass
+            if socket:
+                try:
+                    await socket.disconnect()
+                except  Exception:
+                    logger.exception("Error while closing socket")
 
         await asyncio.sleep(5)
 
