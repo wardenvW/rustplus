@@ -43,7 +43,9 @@ class TrackedList:
             raise ValueError
         
         await self.fetch_status(player)
-        player._last_login = time.time()
+        now = time.time()
+        player._last_logout = now
+        player._last_login = now
         self._players[player.bm_id] = player
         
 
@@ -62,7 +64,7 @@ class TrackedList:
         except Exception as e:
             print(f"Failed to update BOOT_FILE: {e}")
     
-    async def fetch_status(self, player: TrackedPlayer, DEBUG: bool = False) -> None:
+    async def fetch_status(self, player: TrackedPlayer, DEBUG: bool = True) -> None:
         url = f"https://api.battlemetrics.com/players/{player.bm_id}?include=server"
 
         async with self._session.get(url, headers=headers) as resp:
