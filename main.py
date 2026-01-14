@@ -148,7 +148,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
                 await socket.send_team_message(f"Player({bm_id}) not found.")
 
         # ------------------- Keep alive -------------------
-        #await socket.keep_programm_alive()
+        await socket.keep_programm_alive()
     
     finally:
         # Отменяем health check при завершении работы бота
