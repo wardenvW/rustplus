@@ -64,10 +64,14 @@ class TrackedList:
             print(f"Failed to update BOOT_FILE: {e}")
     
     async def fetch_status(self, player: TrackedPlayer, DEBUG: bool = True) -> None:
-        url = f"https://api.battlemetrics.com/players/{player.bm_id}?include=server"
+        try:
+            url = f"https://api.battlemetrics.com/players/{player.bm_id}?include=server"
 
-        async with self._session.get(url, headers=headers) as resp:
-            data = await resp.json()
+            async with self._session.get(url, headers=headers) as resp:
+                data = await resp.json()
+        except Exception as e:
+            logger.warning(f"Failed to process player{player.nickname}: {e}")
+            return
 
         if DEBUG:
             debug_file = f"players/debug_player_{player.bm_id}.json"
@@ -92,7 +96,7 @@ class TrackedList:
 
         player._last_update = time.time()
         
-        logger.info(f"Player {player.bm_id} {'online' if player.online else 'offline'}")
+        logger.info(f"{player.nickname} {player.bm_id} {'online' if player.online else 'offline'}")
         
                         
 
@@ -125,10 +129,14 @@ class TrackedList:
             old_status = {p.bm_id: p.online for p in self._players.values()}
             changed = False
 
-            async with asyncio.TaskGroup() as tg:
-                for player in self._players.values():
-                    if time.time() - player._last_update >= INTERVAL:
-                        tg.create_task(self.fetch_status(player))
+            for player in list(self._players.values()):
+                if time.time() - player._last_update >= INTERVAL:
+                    try:
+                        await self.fetch_status(player)
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as e:
+                        logger.warning(f"fetch_status failed for {player.bm_id}: {e}")
 
             for player in self._players.values():
                 if player.bm_id in old_status:
@@ -141,7 +149,7 @@ class TrackedList:
                     async with self._lock:
                         with open(BOOT_FILE, 'r', encoding='utf-8') as f:
                             data = json.load(f)
-
+                            
                         data["players"] = [p.serialize() for p in self._players.values()]
 
                         with open(BOOT_FILE, 'w', encoding='utf-8') as f:

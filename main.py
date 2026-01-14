@@ -51,7 +51,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
         try:
             await socket.send_team_message(f"{Emoji.EXCLAMATION}{message}")
         except RustError:
-            pass
+            logger.warning("Failed to send spy info")
 
     tracking._on_status_change = on_status_change
 
