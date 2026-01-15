@@ -148,7 +148,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
             nickname = "".join(command.args)
             for player in tracking.players.values():
                 if nickname.lower() == player.nickname.lower():
-                    await socket.send_team_message(f"{Emoji.EXCLAMATION}{player.nickname} {status}")
+                    await socket.send_team_message(f"{Emoji.EXCLAMATION}{player.nickname} {'online' if player.online else 'offline'}")
                     return
             
             await socket.send_team_message(f"{nickname} not found.")
