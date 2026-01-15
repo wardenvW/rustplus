@@ -140,6 +140,19 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
             else:
                 await socket.send_team_message(f"Player({bm_id}) not found.")
 
+        @Command(server_details)
+        async def statusn(command: ChatCommand):
+            if not command.args:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}!statusn [nickname]")
+                return
+            nickname = "".join(command.args)
+            for player in tracking.players.values():
+                if nickname.lower() == player.nickname.lower():
+                    await socket.send_team_message(f"{Emoji.EXCLAMATION}{player.nickname} {status}")
+                    return
+            
+            await socket.send_team_message(f"{nickname} not found.")
+        
         # ------------------- Keep alive -------------------
         await socket.keep_programm_alive()
     
