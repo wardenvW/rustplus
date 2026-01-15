@@ -57,23 +57,15 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
     # ------------------- Health Check -------------------
     async def bot_health_check():
-        attempts = 0
         while True:
             await asyncio.sleep(60)
 
             result = await socket.get_time()
 
             if isinstance(result, RustError):
-                attempts += 1
-                logger.warning(f"[HEALTH CHECK] Server did not respond ({attempts}/3): {result}")
+                logger.warning(f"[HEALTH CHECK] Server did not respond")
             else:
-                attempts = 0
                 logger.info(f"[HEALTH CHECK] Server OK at {time.strftime('%H:%M:%S')}")
-            
-            if attempts >= 3:
-                logger.exception(f"[HEALTH CHECK] Disconnect socket")
-                await socket.disconnect()
-                break
 
     health_task = asyncio.create_task(bot_health_check())
 
