@@ -109,7 +109,7 @@ async def prepare_spying(tracking_list: TrackedList, logger: logging.Logger) -> 
     logger.info("Spying ready!")
 
 async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: RustServer, logger: logging.Logger):
-    """Запускаем команды Rust+ через WebSocket с health check"""
+    """Запускаем команды Rust+ через WebSocket c health check"""
     logger.info("Running bot commands...")
 
     await save_markers_json(socket=socket)
@@ -166,10 +166,16 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
             if not command.args:
                 await socket.send_team_message("Add id")
                 return
+            
             bm_id = command.args[0]
+            player = await tracking.get_player(bm_id=bm_id)
+            if player is not None:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}Player already added!")
+                return
+            
             player = TrackedPlayer(bm_id=bm_id, server_id=tracking.server_id)
             await tracking.add_track(player)
-            await socket.send_team_message(f"{player.nickname}({bm_id}) added")
+            await socket.send_team_message(f"{Emoji.EXCLAMATION}{player.nickname}({bm_id}) added")
 
         @Command(server_details)
         async def delete(command: ChatCommand):
@@ -216,7 +222,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
             if not command.args:
                 await socket.send_team_message(f"{Emoji.EXCLAMATION}!statusn [nickname]")
                 return
-            nickname = "".join(command.args)
+            nickname = " ".join(command.args)
             for player in tracking.players.values():
                 if nickname.lower() == player.nickname.lower():
                     await socket.send_team_message(f"{Emoji.EXCLAMATION}{player.nickname} {'online' if player.online else 'offline'}")

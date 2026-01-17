@@ -100,7 +100,7 @@ class TrackedList:
         
                         
 
-    def get_player(self, bm_id: str) -> Union[TrackedPlayer, None]:
+    async def get_player(self, bm_id: str) -> Union[TrackedPlayer, None]:
         return self._players.get(bm_id)
     
     async def remove_track(self, bm_id: str):
