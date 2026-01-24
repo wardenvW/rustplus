@@ -74,7 +74,7 @@ class TrackedList:
             return
 
         if DEBUG:
-            debug_file = f"players/debug_player_{player.bm_id}.json"
+            debug_file = f"spy/players/debug_player_{player.bm_id}.json"
             with open(debug_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             (f"Saved debug data to {debug_file}")

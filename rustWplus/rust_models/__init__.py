@@ -7,3 +7,4 @@ from .rust_team_info import RustTeamInfo, RustTeamMember, RustTeamNote
 from .rust_entity_info import RustEntityInfo
 from .rust_item import RustItem
 from .rust_error import RustError
+from .rust_monument import RustMonument

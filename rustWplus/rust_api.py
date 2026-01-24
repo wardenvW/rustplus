@@ -23,6 +23,7 @@ from .rust_models import (
     RustChatMessage,
     RustTeamInfo,
     RustMarker,
+    RustMonument,
     RustMap,
     RustEntityInfo,
 )
@@ -223,6 +224,18 @@ class RustSocket:
             return RustError("get_map_markers", response.response.error.error)
         
         return [RustMarker(marker) for marker in response.response.map_markers]
+    
+    async def get_monuments(self) -> Union[List[RustMonument], RustError]:
+        packet = await self._generate_request(tokens=5)
+        packet.get_map = AppEmpty()
+        response = await self.ws.send_and_get(packet)
+
+        if response is None:
+            return RustError("get_map_monuments", "No response received")
+        if error_present(response):
+            return RustError("get_map_monuments", response.response.error.error)
+        
+        return [RustMonument(monument) for monument in response.response.map.monuments]
     
     async def get_map(
             self,

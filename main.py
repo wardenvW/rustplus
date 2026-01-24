@@ -11,6 +11,7 @@ from rustWplus import (
 from rustWplus.gateway.rustplus_proto import AppEmpty
 from rustWplus.constants import BOOT_FILE, FCM_FILE
 from spy import TrackedPlayer, TrackedList
+from event_handler import EventHandler
 
 async def save_markers_json(socket, filename="markers_debug.json"):
     """
@@ -139,7 +140,11 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
     health_task = asyncio.create_task(bot_health_check())
 
+    event_handler = EventHandler(socket=socket, map_size=4000)
+    event_task = asyncio.create_task(event_handler.start())
+
     try:
+
         # ------------------- КОМАНДЫ -------------------
         @Command(server_details, aliases=["time", "время"])
         async def f_time(command: ChatCommand):
@@ -227,7 +232,6 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
                 if nickname.lower() == player.nickname.lower():
                     await socket.send_team_message(f"{Emoji.EXCLAMATION}{player.nickname} {'online' if player.online else 'offline'}")
                     return
-            
             await socket.send_team_message(f"{nickname} not found.")
 
         
@@ -241,7 +245,70 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
             except RustError:
                 logger.warning("Failed to leader promote")
 
+        @Command(server_details)
+        async def on(command: ChatCommand):
+            pass
+
+        @Command(server_details)
+        async def off(command: ChatCommand):
+            pass
+        
+        @Command(server_details)
+        async def vendor(command: ChatCommand):
+            if event_handler.vendor is None:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}Travelling Vendor hasn't been active yet.")
+                return
             
+            await event_handler.vendor.get_info()
+        
+        @Command(server_details)
+        async def oil(command: ChatCommand):
+            event = event_handler.oil_events["Large"]
+            if not event.active:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}Large Oil Rig hasn't been called yet.")
+                return
+            
+            left = event.time_left()
+            await socket.send_team_message(f"{Emoji.EXCLAMATION}Large Oil Rig crate opens in {left//60}m{left%60:02d}s")
+
+        @Command(server_details)
+        async def smoil(command: ChatCommand):
+            event = event_handler.oil_events["Small"]
+            if not event.active:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}Small Oil Rig hasn't been called yet.")
+                return
+            
+            left = event.time_left()
+            await socket.send_team_message(f"{Emoji.EXCLAMATION}Small Oil Rig crate opens in {left//60}m{left%60:02d}s")
+
+        @Command(server_details)
+        async def cargo(command: ChatCommand):
+            if event_handler.cargo is None:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}Cargo Ship hasn't been active yet.")
+                return
+            
+            await event_handler.cargo.get_info()
+
+        @Command(server_details)
+        async def patrol(command: ChatCommand):
+            if event_handler.patrol_heli is None:
+                await socket.send_team_message(f"{Emoji.EXCLAMATION}Patrol Heli hasn't been active yet.")
+                return
+            
+            await event_handler.patrol_heli.get_info()
+
+        @Command(server_details)
+        async def e_add(command: ChatCommand):
+            pass
+
+        @Command(server_details)
+        async def e_remove(command: ChatCommand):
+            pass
+
+        @Command(server_details)
+        async def e_all(command: ChatCommand):
+            pass
+
         
         # ------------------- Keep alive -------------------
         await hang_bot(socket=socket)
