@@ -4,6 +4,7 @@ from rustWplus import RustSocket, RustError, RustMarker, RustMonument
 from collections import defaultdict
 import asyncio
 import logging
+import time
 
 OPENING_TIME = 900
 class Marker:
@@ -19,6 +20,7 @@ class Marker:
 class EventHandler:
     def __init__(self, socket: RustSocket, map_size: int = 4000) -> None:
         self.just_start = True
+        self.last_heartbeat: int = 0
 
         self.socket: RustSocket = socket
         self.logger: logging.Logger = logging.getLogger('events')
@@ -41,13 +43,24 @@ class EventHandler:
     async def start(self) -> None:
         self.logger.info(f"Started monuments init [map_size={self.map_size}]")
 
+        self.last_heartbeat = time.time() - 60
 
         await self.init_monuments()
 
         while self.socket.ws.connection.open:
-            self.logger.debug("Requesting markers...")
+            now = time.time()
+
             markers: Union[List[RustMarker], RustError] = await self.socket.get_markers()
-            self.logger.debug("Markers response received")
+            if now - self.last_heartbeat >= 60:
+                self.logger.info(
+                    f"Polling active | "
+                    f"tracked VM: {len(self.vending_machines)} | "
+                    f"{time.strftime('%H:%M:%S')}"
+                )
+
+                self.last_heartbeat = time.time()
+
+                self.logger.debug("Markers response received")
 
             if isinstance(markers, RustError):
                 self.logger.warning("Catch RustError, trying to get markers again")
