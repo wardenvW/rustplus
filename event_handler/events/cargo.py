@@ -1,5 +1,5 @@
 from rustWplus import RustSocket, Emoji
-from utils import convert_coordinates_to_grid, convert_coordinates_to_map_side, is_in_harbor, find_nearest_harbor_cords
+from ..utils import convert_coordinates_to_grid, convert_coordinates_to_map_side, is_in_harbor, find_nearest_harbor_cords
 import time
 
 class CargoShip:

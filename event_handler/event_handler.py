@@ -1,6 +1,6 @@
-from events import CargoShip, CH47, Vendor, VendingMachine, PatrolHelicopter, Crate, OilRigEvent
+from .events import CargoShip, CH47, Vendor, VendingMachine, PatrolHelicopter, Crate, OilRigEvent
 from typing import List, Union, Optional
-from rustWplus import RustSocket, RustError, RustMarker, RustMonument, Emoji
+from rustWplus import RustSocket, RustError, RustMarker, RustMonument
 from collections import defaultdict
 import asyncio
 import logging
@@ -46,7 +46,7 @@ class EventHandler:
                 self.logger.warning("Catch RustError, trying to get markers again")
                 await asyncio.sleep(1)
                 continue
-
+            self.logger.info("Got Markers!")
             marker_by_id = {m.id: m for m in markers}
 
 
@@ -182,8 +182,9 @@ class EventHandler:
 
     async def init_monuments(self) -> None:
         self.logger.info("Trying to call get_monuments()")
-        monuments = await self.socket.get_monuments()
+        monuments = await self.socket.get_info()
         if isinstance(monuments, RustError):
+            self.logger.error(f"Got and error: {monuments}")
             return
 
         self.monuments = defaultdict(list)

@@ -28,8 +28,8 @@ class RustServerInfo(Serializable):
         return self._map
 
     @property
-    def size(self) -> int:
-        return self._size
+    def map_size(self) -> int:
+        return self._map_size
 
     @property
     def players(self) -> int:
@@ -61,12 +61,12 @@ class RustServerInfo(Serializable):
     
     def __str__(self) -> str:
         return (
-            "RustInfo[url={}, name={}, map={}, size={}, players={}, max_players={}, queued_players={}, seed={}, "
+            "RustInfo[url={}, name={}, map={}, map_size={}, players={}, max_players={}, queued_players={}, seed={}, "
             "wipe_time={}, header_image={}, logo_image={}]".format(
                 self._url,
                 self._name,
                 self._map,
-                self._size,
+                self._map_size,
                 self._players,
                 self._max_players,
                 self._queued_players,

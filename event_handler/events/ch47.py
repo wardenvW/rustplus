@@ -1,26 +1,18 @@
 import asyncio
 import time
 from rustWplus import RustSocket, Emoji
-from utils import get_oil_info
+from ..utils import get_oil_info
+import logging
 
 OPENING_TIME = 900
-
-
-import asyncio
-import time
-from rustWplus import RustSocket, Emoji
-from utils import get_oil_info
-
-OPENING_TIME = 900
-
-
 class OilRigEvent:
     def __init__(self, oil_type: str, socket: RustSocket) -> None:
         self.oil_type: str = oil_type          # "Small" | "Large"
         self.socket: RustSocket = socket
+        self.logger: logging.Logger = logging.getLogger('events')
 
-        self.start_time = time.time()
-        self.active: bool = True
+        self.start_time = -1
+        self.active: bool = False
         self.opened: bool = False
 
         self.task: asyncio.Task | None = None
@@ -30,9 +22,8 @@ class OilRigEvent:
         self.active = True
         self.opened = False
 
-        await self.socket.send_team_message(
-            f"{Emoji.EXCLAMATION}{self.oil_type} Oil Rig was called!"
-        )
+        self.logger.info(f"{self.oil_type} Oil Rig was called")
+        await self.socket.send_team_message(f"{Emoji.EXCLAMATION}{self.oil_type} Oil Rig was called!")
         self.task = asyncio.create_task(self._timer())
 
     async def _timer(self):
@@ -40,6 +31,7 @@ class OilRigEvent:
             await asyncio.sleep(OPENING_TIME)
             if self.active:
                 self.opened = True
+                self.logger.info(f"{self.oil_type} Crate Opened!")
                 await self.socket.send_team_message(
                     f"{Emoji.EXCLAMATION}Crate OPENED! {self.oil_type} Oil Rig!"
                 )
@@ -53,6 +45,9 @@ class OilRigEvent:
             self.task = None
 
     async def time_left(self) -> int:
+        if not self.active:
+            return -1
+
         if self.opened:
             return 0
         
@@ -68,8 +63,5 @@ class CH47:
         self.monuments = monuments
         
     def get_oilrig(self) -> tuple[bool, str | None]:
-        """
-        :return: (is_oilrig, oil_type)
-                 oil_type = "Small" | "Large" | None
-        """
+
         return get_oil_info((self.x, self.y), self.monuments)

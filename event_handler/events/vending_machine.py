@@ -1,5 +1,5 @@
 from rustWplus import RustSocket, Emoji
-from utils import convert_coordinates_to_grid
+from ..utils import convert_coordinates_to_grid
 
 class VendingMachine():
     def __init__(self, data, socket: RustSocket, map_size) -> None:

@@ -77,7 +77,11 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
     health_task = asyncio.create_task(bot_health_check())
 
-    event_handler = EventHandler(socket=socket, map_size=4000)
+
+    serv: RustServerInfo = await socket.get_info()
+    map_size = serv.map_size
+    print(map_size)
+    event_handler = EventHandler(socket=socket, map_size=map_size)
     event_task = asyncio.create_task(event_handler.start())
 
     try:
@@ -205,7 +209,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
                 await socket.send_team_message(f"{Emoji.EXCLAMATION}Large Oil Rig hasn't been called yet.")
                 return
             
-            left = event.time_left()
+            left = await event.time_left()
             await socket.send_team_message(f"{Emoji.EXCLAMATION}Large Oil Rig crate opens in {left//60}m{left%60:02d}s")
 
         @Command(server_details)
@@ -215,7 +219,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
                 await socket.send_team_message(f"{Emoji.EXCLAMATION}Small Oil Rig hasn't been called yet.")
                 return
             
-            left = event.time_left()
+            left = await event.time_left()
             await socket.send_team_message(f"{Emoji.EXCLAMATION}Small Oil Rig crate opens in {left//60}m{left%60:02d}s")
 
         @Command(server_details)
@@ -296,7 +300,7 @@ async def main():
     events_fh = logging.FileHandler(filename='events.log', encoding='utf-8')
     events_fh.setLevel(logging.DEBUG)
     events_fh.setFormatter(formatter)
-    events_logger.addHandler()
+    events_logger.addHandler(events_fh)
 
     # ------------------- Проверка boot.json -------------------
     default_data = {

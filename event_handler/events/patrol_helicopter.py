@@ -1,5 +1,5 @@
 import time
-from utils import convert_coordinates_to_grid, find_nearest_rad_town, convert_coordinates_to_map_side
+from ..utils import convert_coordinates_to_grid, find_nearest_rad_town, convert_coordinates_to_map_side
 from rustWplus import RustSocket, Emoji
 
 

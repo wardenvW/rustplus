@@ -1,6 +1,6 @@
 import time
 from rustWplus import RustSocket, Emoji
-from utils import find_nearest_rad_town, convert_coordinates_to_grid
+from ..utils import find_nearest_rad_town, convert_coordinates_to_grid
 
 
 class Crate:

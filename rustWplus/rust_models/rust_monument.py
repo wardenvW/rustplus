@@ -37,4 +37,4 @@ class RustMonument(Serializable):
         )
     
     def __hash__(self) -> int:
-        return hash((self._token, self._x, self._y))
+        return hash((self._token))

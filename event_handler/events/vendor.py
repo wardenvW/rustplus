@@ -1,6 +1,6 @@
 from rustWplus import RustSocket, Emoji
 import time
-from utils import convert_coordinates_to_grid
+from ..utils import convert_coordinates_to_grid
 
 
 class Vendor:
