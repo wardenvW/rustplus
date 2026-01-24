@@ -26,6 +26,10 @@ class OilRigEvent:
         self.task: asyncio.Task | None = None
 
     async def start(self):
+        self.start_time = time.time()
+        self.active = True
+        self.opened = False
+
         await self.socket.send_team_message(
             f"{Emoji.EXCLAMATION}{self.oil_type} Oil Rig was called!"
         )
