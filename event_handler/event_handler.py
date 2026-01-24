@@ -18,6 +18,8 @@ class Marker:
     TravelingVendor = 9
 class EventHandler:
     def __init__(self, socket: RustSocket, map_size: int = 4000) -> None:
+        self.just_start = True
+
         self.socket: RustSocket = socket
         self.logger: logging.Logger = logging.getLogger('events')
 
@@ -38,17 +40,32 @@ class EventHandler:
     
     async def start(self) -> None:
         self.logger.info(f"Started monuments init [map_size={self.map_size}]")
+
+
         await self.init_monuments()
 
         while self.socket.ws.connection.open:
+            self.logger.debug("Requesting markers...")
             markers: Union[List[RustMarker], RustError] = await self.socket.get_markers()
+            self.logger.debug("Markers response received")
+
             if isinstance(markers, RustError):
                 self.logger.warning("Catch RustError, trying to get markers again")
                 await asyncio.sleep(1)
                 continue
-            self.logger.info("Got Markers!")
+            
             marker_by_id = {m.id: m for m in markers}
 
+
+            if self.just_start:
+                self.logger.info("Skipping old markers")
+                self.just_start = False
+                active_ids = {m.id for m in marker_by_id.values() if m.type == Marker.VendingMachineMarker}
+                for id in active_ids:
+                    if id not in self.vending_machines:
+                        m = marker_by_id[id]
+                        self.logger.info(f"[NOW SHOWN] Added VendingMachine ({m.id}, {m.x}, {m.y})")
+                        self.vending_machines[id] = VendingMachine(data=m, socket=self.socket, map_size=self.map_size)
 
             await self.handle_vendor(marker_by_id)
             await self.handle_cargo(marker_by_id)
@@ -79,7 +96,7 @@ class EventHandler:
             await self.vendor.on_spawn()
 
         elif not marker and self.vendor is not None and self.vendor.active:
-            self.logger.info(f"Vendor despawn")
+            self.logger.info(f"Vendor despawn ({self.vendor.id}, {self.vendor.x}, {self.vendor.y})")
             await self.vendor.on_despawn()
 
         elif marker and self.vendor is not None and self.vendor.active:
@@ -101,7 +118,7 @@ class EventHandler:
             await self.cargo.on_spawn()
 
         elif not marker and self.cargo is not None and self.cargo.active:
-            self.logger.info(f"Cargo Despawn")
+            self.logger.info(f"Cargo Despawn ({self.cargo.id}, {self.cargo.x}, {self.cargo.y})")
             await self.cargo.on_despawn()
 
         elif marker and self.cargo is not None and self.cargo.active:
@@ -167,6 +184,7 @@ class EventHandler:
 
         for id_ in list(self.ch47s.keys()):
             if id_ not in [m.id for m in active]:
+                self.logger.info(f"CH47 Deleted ({self.ch47s[id_].id}, {self.ch47s[id_].x}, {self.ch47s[id_].y})")
                 del self.ch47s[id_]
 
 
@@ -182,7 +200,7 @@ class EventHandler:
 
     async def init_monuments(self) -> None:
         self.logger.info("Trying to call get_monuments()")
-        monuments = await self.socket.get_info()
+        monuments = await self.socket.get_monuments()
         if isinstance(monuments, RustError):
             self.logger.error(f"Got and error: {monuments}")
             return

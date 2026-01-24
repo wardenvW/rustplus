@@ -52,7 +52,6 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
     """Запускаем команды Rust+ через WebSocket c health check"""
     logger.info("Running bot commands...")
 
-
     async def on_status_change(player: TrackedPlayer, online: bool):
         status_msg = "joined" if online else "left"
         message = f"{player.nickname} {status_msg}"
@@ -78,9 +77,9 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
     health_task = asyncio.create_task(bot_health_check())
 
 
+
     serv: RustServerInfo = await socket.get_info()
     map_size = serv.map_size
-    print(map_size)
     event_handler = EventHandler(socket=socket, map_size=map_size)
     event_task = asyncio.create_task(event_handler.start())
 
@@ -265,6 +264,7 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
     finally:
         # Отменяем health check при завершении работы бота
         health_task.cancel()
+        event_task.cancel()
         try:
             await health_task
         except asyncio.CancelledError:

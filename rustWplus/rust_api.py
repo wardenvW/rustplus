@@ -223,7 +223,12 @@ class RustSocket:
         if error_present(response):
             return RustError("get_map_markers", response.response.error.error)
         
-        return [RustMarker(marker) for marker in response.response.map_markers]
+        app_markers = response.response.map_markers
+        markers = getattr(app_markers, "markers", None)
+        if not markers:
+            return []
+        
+        return [RustMarker(marker) for marker in markers]
     
     async def get_monuments(self) -> Union[List[RustMonument], RustError]:
         packet = await self._generate_request(tokens=5)
