@@ -40,9 +40,7 @@ class OilRigEvent:
 
     async def finish(self):
         self.active = False
-        if self.task:
-            self.task.cancel()
-            self.task = None
+        self.task = None
 
     async def time_left(self) -> int:
         if not self.active:

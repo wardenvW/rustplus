@@ -48,47 +48,51 @@ class EventHandler:
         await self.init_monuments()
 
         while self.socket.ws.connection.open:
-            now = time.time()
+            try:
+                now = time.time()
 
-            markers: Union[List[RustMarker], RustError] = await self.socket.get_markers()
-            if now - self.last_heartbeat >= 60:
-                self.logger.info(
-                    f"Polling active | "
-                    f"tracked VM: {len(self.vending_machines)} | "
-                    f"{time.strftime('%H:%M:%S')}"
-                )
+                markers: Union[List[RustMarker], RustError] = await self.socket.get_markers()
+                if now - self.last_heartbeat >= 60:
+                    self.logger.info(
+                        f"Polling active | "
+                        f"tracked VM: {len(self.vending_machines)} | "
+                        f"{time.strftime('%H:%M:%S')}"
+                    )
 
-                self.last_heartbeat = time.time()
+                    self.last_heartbeat = time.time()
 
-                self.logger.debug("Markers response received")
+                    self.logger.debug("Markers response received")
 
-            if isinstance(markers, RustError):
-                self.logger.warning("Catch RustError, trying to get markers again")
-                await asyncio.sleep(1)
-                continue
+                if isinstance(markers, RustError):
+                    self.logger.warning("Catch RustError, trying to get markers again")
+                    await asyncio.sleep(1)
+                    continue
+                
+                marker_by_id = {m.id: m for m in markers}
+
+
+                if self.just_start:
+                    self.logger.info("Skipping old markers")
+                    self.just_start = False
+                    active_ids = {m.id for m in marker_by_id.values() if m.type == Marker.VendingMachineMarker}
+                    for id in active_ids:
+                        if id not in self.vending_machines:
+                            m = marker_by_id[id]
+                            self.logger.info(f"[NOW SHOWN] Added VendingMachine ({m.id}, {m.x}, {m.y})")
+                            self.vending_machines[id] = VendingMachine(data=m, socket=self.socket, map_size=self.map_size)
+
+                await self.handle_vendor(marker_by_id)
+                await self.handle_cargo(marker_by_id)
+                await self.handle_patrol_heli(marker_by_id)
+                await self.handle_crate(marker_by_id)
+
+                await self.handle_ch47(marker_by_id)
+                await self.handle_vending_machines(marker_by_id)
+                
+            except Exception as e:
+                self.logger.exception(f"EventHandler crashed: {e}")
+                await asyncio.sleep(2)
             
-            marker_by_id = {m.id: m for m in markers}
-
-
-            if self.just_start:
-                self.logger.info("Skipping old markers")
-                self.just_start = False
-                active_ids = {m.id for m in marker_by_id.values() if m.type == Marker.VendingMachineMarker}
-                for id in active_ids:
-                    if id not in self.vending_machines:
-                        m = marker_by_id[id]
-                        self.logger.info(f"[NOW SHOWN] Added VendingMachine ({m.id}, {m.x}, {m.y})")
-                        self.vending_machines[id] = VendingMachine(data=m, socket=self.socket, map_size=self.map_size)
-
-            await self.handle_vendor(marker_by_id)
-            await self.handle_cargo(marker_by_id)
-            await self.handle_patrol_heli(marker_by_id)
-            await self.handle_crate(marker_by_id)
-
-            await self.handle_ch47(marker_by_id)
-            await self.handle_vending_machines(marker_by_id)
-            
-
             await asyncio.sleep(1)
 
     # ----------------- SINGLE EVENTS -----------------
@@ -189,11 +193,13 @@ class EventHandler:
                 await self.ch47s[m.id].on_spawn()
 
                 is_oil, oil_type = self.ch47s[m.id].get_oilrig()
-                if is_oil:
+                if is_oil and oil_type in self.oil_events:
                     oil_event = self.oil_events[oil_type]
                     if not oil_event.active:
                         self.logger.info(f"{oil_type} Oil")
                         await oil_event.start()
+                else:
+                    self.logger.warning(f"Unknown oil_type: {oil_type}")
 
         for id_ in list(self.ch47s.keys()):
             if id_ not in [m.id for m in active]:

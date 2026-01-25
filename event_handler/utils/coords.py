@@ -89,9 +89,13 @@ def get_oil_info(coords: Tuple[int, int], monuments: dict) -> Tuple[bool, Option
             dy = coords[1] - m.y
             d = sqrt(dx*dx + dy*dy)
             if d < OIL_HELI_MAX_DISTANCE:
-                return (True, "Large" if token == 'large_oil_rig' else 'Small')
-    
+                if token == "large_oil_rig":
+                    oil_type = "Large"
+                    return (True, oil_type)
+                elif token == "oil_rig_small":
+                    oil_type = "Small"
+                    return (True, oil_type)
+                else:
+                    return (False, None)
     return (False, None)
-
-
             

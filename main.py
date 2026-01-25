@@ -8,10 +8,12 @@ from rustWplus import (
     FCMListener, RateLimiter, RustServerInfo, Emoji, format_time_simple, 
     RustError
 )
-from rustWplus.gateway.rustplus_proto import AppEmpty
 from rustWplus.constants import BOOT_FILE, FCM_FILE
 from spy import TrackedPlayer, TrackedList
 from event_handler import EventHandler
+
+# ДОБАВИТЬ ПОСЛЕДНИЕ ФУНКЦИИ
+
 
 async def hang_bot(socket: RustSocket) -> None:
     while socket.ws.connection.open:
@@ -274,10 +276,6 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
 async def main():
     # ------------------- ЛОГИРОВАНИЕ -------------------
-    root_logger = logging.getLogger()
-    root_logger.handlers.clear()  # удаляем все старые обработчики
-    root_logger.setLevel(logging.DEBUG)
-
 
     formatter = logging.Formatter('%(asctime)s [%(levelname)s]:%(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
 
