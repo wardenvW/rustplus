@@ -87,13 +87,9 @@ async def run_bot(socket: RustSocket, tracking: TrackedList, server_details: Rus
 
     try:
 
-        result = await socket.get_monuments()
-        for m in result:
-            print(m)
         # ------------------- КОМАНДЫ -------------------
         @Command(server_details, aliases=["time", "время"])
         async def f_time(command: ChatCommand):
-            socket.ws.connection.close()
             result = await socket.get_time()
             if isinstance(result, RustError):
                 logger.error(f"Failed to get server time: {result}")
