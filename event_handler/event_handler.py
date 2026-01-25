@@ -79,7 +79,7 @@ class EventHandler:
                     for id in active_ids:
                         if id not in self.vending_machines:
                             m = marker_by_id[id]
-                            self.logger.info(f"[NOW SHOWN] Added VendingMachine ({m.id}, {m.x}, {m.y})")
+                            self.logger.info(f"[NOT SHOWN] Added VendingMachine ({m.id}, {m.x}, {m.y})")
                             self.vending_machines[id] = VendingMachine(data=m, socket=self.socket, map_size=self.map_size)
 
                 await self.handle_vendor(marker_by_id)

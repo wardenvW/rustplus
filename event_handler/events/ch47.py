@@ -59,6 +59,9 @@ class CH47:
         self.x: int = data.x
         self.y: int = data.y
         self.monuments = monuments
+
+    async def on_spawn(self):
+        pass
         
     def get_oilrig(self) -> tuple[bool, str | None]:
 

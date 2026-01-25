@@ -1,6 +1,7 @@
 from typing import Tuple, Optional
 import string
 from math import sqrt
+import logging
 
 GRID_DIAMETER = 146.28571428571428
 OIL_HELI_MAX_DISTANCE = GRID_DIAMETER * 4
@@ -80,6 +81,8 @@ def find_nearest_rad_town(coords: Tuple[int, int], monuments: dict) -> Optional[
 'oil_rig_small'
 
 def get_oil_info(coords: Tuple[int, int], monuments: dict) -> Tuple[bool, Optional[str]]:
+    logger = logging.getLogger('events')
+
     for token, monument_list in monuments.items():
         if "oil_rig" not in token:
             continue
@@ -88,14 +91,13 @@ def get_oil_info(coords: Tuple[int, int], monuments: dict) -> Tuple[bool, Option
             dx = coords[0] - m.x
             dy = coords[1] - m.y
             d = sqrt(dx*dx + dy*dy)
+            logger.info(f"Distance to oil rig is - {d}")
+
             if d < OIL_HELI_MAX_DISTANCE:
                 if token == "large_oil_rig":
-                    oil_type = "Large"
-                    return (True, oil_type)
+                    return True, "Large"
                 elif token == "oil_rig_small":
-                    oil_type = "Small"
-                    return (True, oil_type)
-                else:
-                    return (False, None)
-    return (False, None)
+                    return True, "Small"
+
+    return False, None
             
