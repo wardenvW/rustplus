@@ -49,6 +49,7 @@ class EventHandler:
 
         while self.socket.ws.connection.open:
             try:
+
                 now = time.time()
 
                 markers: Union[List[RustMarker], RustError] = await self.socket.get_markers()
@@ -89,11 +90,14 @@ class EventHandler:
                 await self.handle_ch47(marker_by_id)
                 await self.handle_vending_machines(marker_by_id)
                 
+            except asyncio.CancelledError:
+                self.logger.warning("EventHandler cancelled")
+                raise
             except Exception as e:
                 self.logger.exception(f"EventHandler crashed: {e}")
                 await asyncio.sleep(2)
             
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
 
     # ----------------- SINGLE EVENTS -----------------
     async def handle_vendor(self, marker_by_id):
@@ -189,7 +193,7 @@ class EventHandler:
         for m in active:
             if m.id not in self.ch47s:
                 self.logger.info(f"CH47 spawn ({m.id}, {m.x}, {m.y})")
-                self.ch47s[m.id] = CH47(data=m, socket=self.socket, monuments=self.monuments)
+                self.ch47s[m.id] = CH47(data=m, monuments=self.monuments)
                 await self.ch47s[m.id].on_spawn()
 
                 is_oil, oil_type = self.ch47s[m.id].get_oilrig()

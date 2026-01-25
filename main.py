@@ -342,7 +342,7 @@ async def main():
                 server_details=server_details,
                 command_options=CommandOptions(prefix="!"),
                 ratelimiter=RateLimiter().default(),
-                debug=True
+                debug=False
             )
 
             logger.info("Connecting to Rust+ WebSocket...")
